@@ -17,7 +17,7 @@ export const getFilterOptions = (list) => {
                 }
                 return acc;
             }, new Set())
-        ).map((r) => ({ label: capitalize(`${r}`), value: r }));
+        ).map((r) => ({ label: capitalize(`${r}`), value: r })).sort((a, b) => a.label - b.label);
     });
     return res;
 };
@@ -29,10 +29,8 @@ export const getFilteredJobs = (jobs, filterOptions) => {
             return filterOptions["roles"].includes(jobRole);
         })
         .filter(({ minExp }) => {
-            if (!filterOptions["minExp"].length) return true;
-            return (
-                minExp >= Math.min(...filterOptions["minExp"])
-            );
+            if (!filterOptions["minExp"]) return true;
+            return minExp >= filterOptions["minExp"]
         })
         .filter(({ location }) => {
             if (!filterOptions["location"].length) return true;
@@ -40,10 +38,7 @@ export const getFilteredJobs = (jobs, filterOptions) => {
                 .includes(location);
         })
         .filter(({ minJdSalary }) => {
-            if (!filterOptions["minSalary"].length) return true;
-            return (
-                minJdSalary >=
-                Math.min(...filterOptions["minSalary"])
-            );
+            if (!filterOptions["minSalary"]) return true;
+            return minJdSalary >= filterOptions["minSalary"]
         });
 };

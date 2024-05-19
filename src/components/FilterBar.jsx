@@ -2,18 +2,20 @@ import { Autocomplete, Grid, TextField } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedFilter } from "../store/features/filterSlice";
 
+const minSalaryOptions = new Array(20)
+  .fill(null)
+  .map((_, i) => ({ label: `${(i + 1) * 5} LPA`, value: (i + 1) * 5 }));
 export default function FilterBar() {
   const filters = useSelector((state) => state.filters);
   const roleOptions = filters.roles;
   const minExpOptions = filters.minExp;
   const locationOptions = filters.location;
-  const minSalaryOptions = filters.minSalary;
   const selected = filters.selected;
 
   const dispatch = useDispatch();
 
   return (
-    <Grid container spacing={2} pr={{ xs: 3 }}>
+    <Grid container spacing={2}>
       <Grid item xs={12} lg={3}>
         <Autocomplete
           multiple
@@ -35,7 +37,6 @@ export default function FilterBar() {
       </Grid>
       <Grid item xs={12} lg={3}>
         <Autocomplete
-          multiple
           size="small"
           fullWidth
           options={minExpOptions}
@@ -54,7 +55,6 @@ export default function FilterBar() {
       </Grid>
       <Grid item xs={12} lg={3}>
         <Autocomplete
-          multiple
           size="small"
           fullWidth
           options={minSalaryOptions}

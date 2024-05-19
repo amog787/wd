@@ -7,17 +7,19 @@ const initialState = {
     minSalary: [],
     selected: {
         roles: [],
-        minExp: [],
+        minExp: null,
         location: [],
-        minSalary: [],
+        minSalary: null,
     },
     filterBy: {
         roles: [],
-        minExp: [],
+        minExp: null,
         location: [],
-        minSalary: [],
-    }
+        minSalary: null,
+    },
+    filtersApplied: false
 }
+
 export const filterSlice = createSlice({
     name: "filters",
     initialState,
@@ -27,7 +29,14 @@ export const filterSlice = createSlice({
         },
         setSelectedFilter: (state, action) => {
             state.selected[action.payload.filterKey] = action.payload.selectedOptions
-            state.filterBy[action.payload.filterKey] = action.payload.selectedOptions.map(({ value }) => value)
+            if (Array.isArray(action.payload.selectedOptions)) {
+                state.filterBy[action.payload.filterKey] = action.payload.selectedOptions.map(({ value }) => value)
+            } else {
+                state.filterBy[action.payload.filterKey] = action.payload.selectedOptions?.value
+            }
+            state.filtersApplied = Object.values(state.filterBy).some((f) =>
+                Array.isArray(f) ? f.length > 0 : Boolean(f)
+            );
         }
     }
 })

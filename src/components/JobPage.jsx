@@ -1,47 +1,29 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import JobCard from "./JobCard";
-import { Grid, Typography } from "@mui/material";
+import { Container, Grid, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { getJobs } from "../store/features/jobSlice";
 import { getFilteredJobs } from "../utils/filterUtils";
+import useInView from "../hooks/intersection-observer";
 
 export default function JobPage() {
   const data = useSelector((state) => state.jobs.data);
-  const fetching = useSelector((state) => state.jobs.fetching);
   const totalJobs = useSelector((state) => state.jobs.totalCount);
   const filters = useSelector((state) => state.filters.filterBy);
-
-  const filtersApplied = Object.values(filters).some((f) => f.length > 0);
+  const filtersApplied = useSelector((state) => state.filters.filtersApplied);
 
   const jobs = filtersApplied ? getFilteredJobs(data, filters) : data;
   const dispatch = useDispatch();
 
-  const observerTarget = useRef(null);
+  const handleInfiniteScroll = () => {
+    dispatch(getJobs({ limit: filtersApplied ? 500 : 10 }));
+  };
+
+  const [ref, inView] = useInView(handleInfiniteScroll);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          dispatch(getJobs({ limit: filtersApplied ? 500 : 10 }));
-        }
-      },
-      { threshold: 1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
-    };
-  }, [observerTarget, filtersApplied]);
-
-  useEffect(() => {
-    dispatch(getJobs());
-  }, []);
+    if (inView) handleInfiniteScroll();
+  }, [inView]);
 
   return (
     <>
@@ -49,7 +31,7 @@ export default function JobPage() {
         Loaded {data.length} out of {totalJobs} Jobs (Filtered:{" "}
         {filtersApplied ? jobs.length : 0})
       </Typography>
-      <Grid container spacing={4} pr={{ xs: 3 }}>
+      <Grid container spacing={4}>
         {jobs.map((d) => (
           <Grid
             item
@@ -63,10 +45,12 @@ export default function JobPage() {
             <JobCard data={d} />
           </Grid>
         ))}
-        <Grid item xs={12} md={6} lg={4} xl={3} height="fit-content">
-          <div ref={observerTarget}></div>
-        </Grid>
-        {fetching && <p>Loading...</p>}
+        <Container ref={ref}>
+          <Typography variant="body2" textAlign="center">
+            {data.length < totalJobs ? "Fetching More Jobs..." : ""}
+            {filtersApplied && jobs.length === 0 && "No Jobs Found..."}
+          </Typography>
+        </Container>
       </Grid>
     </>
   );

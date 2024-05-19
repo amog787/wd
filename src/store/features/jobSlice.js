@@ -3,14 +3,14 @@ import { setFilterOptions } from "./filterSlice";
 import { getFilterOptions } from "../../utils/filterUtils";
 
 const initialState = {
+    _jobs: {},
     data: [],
     totalCount: 0,
     fetching: false,
-    lastItem: null,
     error: "",
 };
 
-const JOBS_URL = "https://api.weekday.technology/adhoc/getSampleJdJSON";
+const JOBS_URL = import.meta.env.WD_JOBS_ENDPOINT;
 const headers = new Headers();
 headers.append("Content-Type", "application/json");
 
@@ -18,9 +18,14 @@ export const getJobs = createAsyncThunk(
     "getJobs",
     async ({ limit = 10 }, thunkAPI) => {
         const jobs = thunkAPI.getState().jobs.data
+        const totalJobs = thunkAPI.getState().jobs.totalCount || 0
+        const offset = jobs.length
+        if (totalJobs > 0 && offset >= totalJobs) {
+            return thunkAPI.rejectWithValue("No more jobs available")
+        }
         const body = JSON.stringify({
             limit,
-            offset: jobs.length === 0 ? 0 : jobs.length + limit,
+            offset,
         });
 
         const requestOptions = {
@@ -30,26 +35,9 @@ export const getJobs = createAsyncThunk(
         };
 
         const { totalCount = 0, jdList = [] } = await fetch(JOBS_URL, requestOptions).then(res => res.json())
-        if (totalCount === 0) return thunkAPI.rejectWithValue("Something went wrong...")
-        if (jobs.length === 0) {
-            const options = getFilterOptions(jdList)
-            Object.entries(options).forEach(([filterKey, filterOptions]) => {
-                thunkAPI.dispatch(setFilterOptions({
-                    filterKey,
-                    filterOptions
-                }))
-            })
-            return thunkAPI.fulfillWithValue({
-                totalCount, jobs: jdList
-            })
-        }
-        const lastItemFromAPI = jdList[jdList.length - 1]?.jdUid
-        const lastItemFromState = jobs[jobs.length - 1]?.jdUid
-        if (lastItemFromAPI === lastItemFromState) {
-            return thunkAPI.rejectWithValue("Duplicate API call")
-        }
-        const newJobs = [...jobs, ...jdList]
-        const options = getFilterOptions(newJobs)
+        if (totalCount === 0 || !jdList.length) return thunkAPI.rejectWithValue("Something went wrong...")
+
+        const options = getFilterOptions(jdList)
         Object.entries(options).forEach(([filterKey, filterOptions]) => {
             thunkAPI.dispatch(setFilterOptions({
                 filterKey,
@@ -57,7 +45,7 @@ export const getJobs = createAsyncThunk(
             }))
         })
         return thunkAPI.fulfillWithValue({
-            totalCount, jobs: newJobs
+            totalCount, jobs: jdList
         })
     }
 );
@@ -73,7 +61,12 @@ export const jobSlice = createSlice({
         })
         builder.addCase(getJobs.fulfilled, (state, action) => {
             state.totalCount = action.payload.totalCount
-            state.data = action.payload.jobs
+            action.payload.jobs.forEach(j => {
+                if (!state._jobs[j.jdUid]) {
+                    state.data.push(j)
+                    state._jobs[j.jdUid] = true;
+                }
+            })
             state.fetching = false
         })
         builder.addCase(getJobs.rejected, (state, action) => {

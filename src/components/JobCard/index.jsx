@@ -1,4 +1,4 @@
-import { capitalize } from "@mui/material";
+import { Avatar, capitalize } from "@mui/material";
 import "./JobCard.css";
 import { useState, memo } from "react";
 
@@ -20,8 +20,8 @@ function JobCard({ data }) {
     jobDetailsFromCompany,
     jdLink,
     posted = "13 days ago",
-    name = "Company Name",
-    logo = "https://storage.googleapis.com/weekday-assets/airtableAttachment_1713598325603_7ico7.jpg",
+    companyName,
+    logoUrl,
   } = data;
 
   const [viewMore, setViewMore] = useState(false);
@@ -33,10 +33,10 @@ function JobCard({ data }) {
       </div>
       <div className="j-body">
         <div className="j-company">
-          <img src={logo} alt="Company Logo" />
+          <img src={logoUrl} alt={`${companyName} logo`} />
 
           <div className="j-company-details">
-            <h3>{capitalize(name)}</h3>
+            <h3>{capitalize(companyName)}</h3>
             <h2>{capitalize(jobRole)}</h2>
             <p>{capitalize(location)}</p>
           </div>
@@ -73,7 +73,20 @@ function JobCard({ data }) {
         </div>
       </div>
       <div className="j-apply">
-        <button onClick={() => window.open(jdLink)}>⚡ Easy Apply</button>
+        <button onClick={() => window.open(jdLink)} className="j-apply-button">
+          ⚡ Easy Apply
+        </button>
+        <button className="j-ref-button">
+          <Avatar
+            src="https://mui.com/static/images/avatar/1.jpg"
+            className="j-ref-avatar"
+          />
+          <Avatar
+            src="https://mui.com/static/images/avatar/2.jpg"
+            className="j-ref-avatar"
+          />
+          Unlock Referrals
+        </button>
       </div>
     </div>
   );
