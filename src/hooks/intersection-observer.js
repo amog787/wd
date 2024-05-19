@@ -1,16 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-export default function useInView() {
+export default function useInView(cb) {
     const observerTarget = useRef(null);
-    const [inView, setInView] = useState(false)
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries[0].isIntersecting) {
-                    setInView(true)
-                } else {
-                    setInView(false)
+                    cb()
                 }
             },
         );
@@ -25,7 +22,7 @@ export default function useInView() {
                 observer.unobserve(observerTarget.current);
             }
         };
-    }, [observerTarget]);
+    }, [observerTarget, cb]);
 
-    return [observerTarget, inView];
+    return observerTarget;
 }

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback } from "react";
 import JobCard from "./JobCard";
 import { Container, Grid, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,15 +15,11 @@ export default function JobPage() {
   const jobs = filtersApplied ? getFilteredJobs(data, filters) : data;
   const dispatch = useDispatch();
 
-  const handleInfiniteScroll = () => {
+  const handleInfiniteScroll = useCallback(() => {
     dispatch(getJobs({ limit: filtersApplied ? 500 : 10 }));
-  };
+  }, [filtersApplied]);
 
-  const [ref, inView] = useInView(handleInfiniteScroll);
-
-  useEffect(() => {
-    if (inView) handleInfiniteScroll();
-  }, [inView]);
+  const ref = useInView(handleInfiniteScroll);
 
   return (
     <>
